@@ -1,50 +1,47 @@
-import { useEffect, useState } from "react";
-import "./App.css";
-import Upload from "./components/upload";
+import React, { useState } from "react";
 import axios from "axios";
 
 function App() {
-  const [uploadFile, setUploadFile] = useState();
-  console.log(uploadFile);
-  useEffect(() => {
-    async function handleSubmit() {
-      if (!uploadFile) {
-        return "File is not uploaded";
-      }
+  const [file, setFile] = useState(null);
+  const [message, setMessage] = useState("");
 
-      const formData = new FormData();
-      formData.append("file", uploadFile);
+  const handleFileChange = (e) => {
+    setFile(e.target.files[0]);
+  };
 
-      try {
-        const response = await axios.post(
-          "https://www.virustotal.com/api/v3/files",
-          formData,
-          {
-            headers: {
-              "x-apikey":
-                "",
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        const results = await axios.get(await response.data.data.links.self, {
-          headers: {
-            "x-apikey":
-              "",
-          },
-        });
-        console.log(results.data);
-      } catch (error) {
-        console.log(error, "failed");
-      }
+  const handleUpload = async () => {
+    if (!file) {
+      setMessage("Please select a file first.");
+      return;
     }
-    handleSubmit();
-  }, [uploadFile]);
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    try {
+      const response = await axios.post(
+        "http://localhost:3001/upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      setMessage("Upload successful!");
+      console.log("Server response:", response.data);
+    } catch (error) {
+      console.error("Upload failed:", error);
+      setMessage("Upload failed.");
+    }
+  };
 
   return (
     <div>
-      <Upload setUploadFile={setUploadFile} />
-      <p>Hello</p>
+      <h1>Upload File to VirusTotal via Express</h1>
+      <input type="file" onChange={handleFileChange} />
+      <button onClick={handleUpload}>Upload File</button>
+      {message && <p>{message}</p>}
     </div>
   );
 }
