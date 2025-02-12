@@ -1,3 +1,9 @@
 body {
-  background-color: #161625;
+  background-color: #161625; /* Background color for the entire page */
+  margin: 0;
+  font-family: Arial, sans-serif;
+}
+
+.App {
+  color: #fff;
 }
