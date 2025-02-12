@@ -1,15 +1,14 @@
-import css from "./cssModules/upload.module.css";
+import React from "react";
+import styles from "./cssModules/upload.module.css";
 
-export default function Upload({ setUploadFile }) {
-  function handleSelct(e) {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setUploadFile(selectedFile);
-    }
-  }
+export default function Upload({ handleFileChange, handleUpload, message }) {
   return (
-    <div className={css.container}>
-      <input type="file" onChange={(e) => handleSelct(e)}></input>
+    <div className={styles.uploadContainer}>
+      <input type="file" onChange={handleFileChange} className={styles.input} />
+      <button onClick={handleUpload} className={styles.button}>
+        Upload File
+      </button>
+      {message && <p className={styles.message}>{message}</p>}
     </div>
   );
 }
