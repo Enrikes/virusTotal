@@ -1,19 +1,24 @@
 .container {
   display: flex;
+  flex-wrap: wrap;
   background-color: #2f3d5c;
   justify-content: center;
-  flex-wrap: wrap;
-  gap: 16px;
   padding: 16px;
+  gap: 16px;
 }
 
 .gridItem {
-  flex: 0 1 calc(25% - 16px);
-  border: 1px solid #ccc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 200px;
+  padding: 8px;
+  background-color: #1f2933;
   border-radius: 4px;
-  padding: 16px;
-  box-sizing: border-box;
-  text-align: center;
-  background-color: #ffffff;
-  color: #000;
+  color: #fff;
+  font-family: sans-serif;
+}
+
+.failedText {
+  color: grey; /* Grey text for failed items */
 }
