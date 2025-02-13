@@ -3,12 +3,14 @@ import axios from "axios";
 import Navbar from "./components/navBar";
 import UploadSection from "./components/upload";
 import ResultsGrid from "./components/resultsGrid";
+import FileInfo from "./components/fileInfo";
 import "./App.css";
 
 function App() {
   const [file, setFile] = useState(null);
   const [analysisData, setAnalysisData] = useState(null);
   const [message, setMessage] = useState("");
+  const [selectedTab, setSelectedTab] = useState("detections");
 
   const handleFileChange = (e) => {
     setFile(e.target.files[0]);
@@ -24,7 +26,6 @@ function App() {
     setMessage("Uploading...");
     const formData = new FormData();
     formData.append("file", file);
-
     try {
       const response = await axios.post(
         "http://localhost:3001/upload",
@@ -34,7 +35,6 @@ function App() {
         }
       );
       setAnalysisData(response.data);
-      // Compute a display status.
       let scanStatus = response.data.data.attributes.status;
       if (!scanStatus && response.data.data.attributes.last_analysis_stats) {
         const stats = response.data.data.attributes.last_analysis_stats;
@@ -75,12 +75,11 @@ function App() {
     }
   };
 
-  // Automatic refresh: poll every 15 seconds if scan isn't complete.
+  // Automatic refresh every 15 seconds if scan isn't complete
   useEffect(() => {
     let intervalId;
     if (analysisData && analysisData.data && analysisData.data.attributes) {
       const attrs = analysisData.data.attributes;
-      // If the historical scan already has results, or if it's a new scan that's completed, no need to poll.
       if (!attrs.last_analysis_results && attrs.status !== "completed") {
         intervalId = setInterval(() => {
           handleRefresh();
@@ -92,7 +91,6 @@ function App() {
     };
   }, [analysisData]);
 
-  // Determine display status for showing current scan status.
   let displayStatus = "";
   if (analysisData && analysisData.data && analysisData.data.attributes) {
     displayStatus = analysisData.data.attributes.status;
@@ -118,15 +116,28 @@ function App() {
           )}
         </div>
       )}
-      {analysisData && analysisData.data && analysisData.data.attributes ? (
-        analysisData.data.attributes.last_analysis_results ? (
-          <ResultsGrid
-            results={analysisData.data.attributes.last_analysis_results}
-          />
-        ) : (
-          <p>Waiting for scan to complete...</p>
-        )
-      ) : null}
+      {analysisData && analysisData.data && analysisData.data.attributes && (
+        <div style={{ textAlign: "center", margin: "16px" }}>
+          <button onClick={() => setSelectedTab("detections")}>
+            Detections
+          </button>
+          <button onClick={() => setSelectedTab("fileInfo")}>File Info</button>
+        </div>
+      )}
+      {analysisData && analysisData.data && analysisData.data.attributes && (
+        <div>
+          {selectedTab === "detections" &&
+          analysisData.data.attributes.last_analysis_results ? (
+            <ResultsGrid
+              results={analysisData.data.attributes.last_analysis_results}
+            />
+          ) : selectedTab === "fileInfo" ? (
+            <FileInfo analysisData={analysisData} />
+          ) : (
+            <p>Waiting for scan to complete...</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
