@@ -4,6 +4,7 @@ import Navbar from "./components/navBar";
 import UploadSection from "./components/upload";
 import ResultsGrid from "./components/resultsGrid";
 import FileInfo from "./components/fileInfo";
+import tabsStyles from "./components/cssModules/tabs.module.css";
 import "./App.css";
 
 function App() {
@@ -75,7 +76,7 @@ function App() {
     }
   };
 
-  // Automatic refresh every 15 seconds if scan isn't complete
+  // Auto-refresh every 15 seconds if scan isn't complete
   useEffect(() => {
     let intervalId;
     if (analysisData && analysisData.data && analysisData.data.attributes) {
@@ -109,34 +110,44 @@ function App() {
         message={message}
       />
       {analysisData && analysisData.data && analysisData.data.attributes && (
-        <div style={{ textAlign: "center", margin: "16px" }}>
-          <p>Current Scan Status: {displayStatus}</p>
-          {displayStatus !== "completed" && (
-            <button onClick={handleRefresh}>Refresh</button>
-          )}
-        </div>
-      )}
-      {analysisData && analysisData.data && analysisData.data.attributes && (
-        <div style={{ textAlign: "center", margin: "16px" }}>
-          <button onClick={() => setSelectedTab("detections")}>
-            Detections
-          </button>
-          <button onClick={() => setSelectedTab("fileInfo")}>File Info</button>
-        </div>
-      )}
-      {analysisData && analysisData.data && analysisData.data.attributes && (
-        <div>
-          {selectedTab === "detections" &&
-          analysisData.data.attributes.last_analysis_results ? (
-            <ResultsGrid
-              results={analysisData.data.attributes.last_analysis_results}
-            />
-          ) : selectedTab === "fileInfo" ? (
-            <FileInfo analysisData={analysisData} />
-          ) : (
-            <p>Waiting for scan to complete...</p>
-          )}
-        </div>
+        <>
+          <div className={tabsStyles.tabsContainer}>
+            <button
+              className={`${tabsStyles.tabButton} ${
+                selectedTab === "detections" ? tabsStyles.activeTab : ""
+              }`}
+              onClick={() => setSelectedTab("detections")}
+            >
+              Detections
+            </button>
+            <button
+              className={`${tabsStyles.tabButton} ${
+                selectedTab === "fileInfo" ? tabsStyles.activeTab : ""
+              }`}
+              onClick={() => setSelectedTab("fileInfo")}
+            >
+              File Info
+            </button>
+          </div>
+          <div style={{ textAlign: "center", margin: "16px" }}>
+            <p>Current Scan Status: {displayStatus}</p>
+            {displayStatus !== "completed" && (
+              <button onClick={handleRefresh}>Refresh</button>
+            )}
+          </div>
+          <div>
+            {selectedTab === "detections" &&
+            analysisData.data.attributes.last_analysis_results ? (
+              <ResultsGrid
+                results={analysisData.data.attributes.last_analysis_results}
+              />
+            ) : selectedTab === "fileInfo" ? (
+              <FileInfo analysisData={analysisData} />
+            ) : (
+              <p>Waiting for scan to complete...</p>
+            )}
+          </div>
+        </>
       )}
     </div>
   );

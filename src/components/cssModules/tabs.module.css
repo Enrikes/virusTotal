@@ -1,0 +1,28 @@
+.tabsContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-bottom: 2px solid #2f3d5c; /* Long line under the tabs */
+  margin-bottom: 16px;
+  padding-bottom: 8px;
+}
+
+.tabButton {
+  background: transparent;
+  border: none;
+  color: #fff;
+  font-size: 1.2em;
+  padding: 12px 24px; /* Large clickable area */
+  cursor: pointer;
+  transition: color 0.3s ease;
+}
+
+.tabButton:hover {
+  color: #ccc;
+}
+
+/* Highlight the active tab */
+.activeTab {
+  border-bottom: 2px solid #fff;
+  color: #fff;
+}
