@@ -16,6 +16,22 @@ const FileInfo = ({ analysisData }) => {
   const lastAnalysisDate = attributes.last_analysis_date;
   const signatureInfo = attributes.signature_info;
 
+  // Helper: For any object or array, only display the "name" property
+  const renderSignatureValue = (value) => {
+    if (Array.isArray(value)) {
+      // Map over each object in the array and get its "name"
+      return value
+        .map((item) => (item && item.name ? item.name : ""))
+        .filter(Boolean)
+        .join(", ");
+    } else if (typeof value === "object" && value !== null) {
+      // For a single object, return its "name"
+      return value.name ? value.name : "";
+    } else {
+      return value;
+    }
+  };
+
   return (
     <div className={styles.container}>
       <h2>File Information</h2>
@@ -61,7 +77,7 @@ const FileInfo = ({ analysisData }) => {
           <h3>Signature Info</h3>
           {Object.entries(signatureInfo).map(([key, value]) => (
             <p key={key}>
-              <strong>{key}:</strong> {value}
+              <strong>{key}:</strong> {renderSignatureValue(value)}
             </p>
           ))}
         </div>
