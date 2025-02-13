@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import Navbar from "./components/navBar";
 import UploadSection from "./components/upload";
@@ -21,7 +21,6 @@ function App() {
       setMessage("Please select a file first.");
       return;
     }
-
     setMessage("Uploading...");
     const formData = new FormData();
     formData.append("file", file);
@@ -34,19 +33,20 @@ function App() {
           headers: { "Content-Type": "multipart/form-data" },
         }
       );
-      // Save the initial analysis response.
       setAnalysisData(response.data);
-      setMessage(
-        "Upload successful! Scan status: " +
-          response.data.data.attributes.status
-      );
+      // Compute a display status.
+      let scanStatus = response.data.data.attributes.status;
+      if (!scanStatus && response.data.data.attributes.last_analysis_stats) {
+        const stats = response.data.data.attributes.last_analysis_stats;
+        scanStatus = stats.malicious > 0 ? "malicious" : "clean";
+      }
+      setMessage("Upload successful! Scan status: " + scanStatus);
     } catch (error) {
       console.error("Upload failed:", error);
       setMessage("Upload failed.");
     }
   };
 
-  // This function manually refreshes the scan status.
   const handleRefresh = async () => {
     if (
       analysisData &&
@@ -54,17 +54,18 @@ function App() {
       analysisData.data.links &&
       analysisData.data.links.self
     ) {
-      const analysisUrl = analysisData.data.links.self;
       setMessage("Refreshing scan status...");
       try {
-        const response = await axios.get(analysisUrl, {
-          headers: { "x-apikey": "<YOUR_API_KEY>" }, // Only needed if required by the API.
+        const response = await axios.get("http://localhost:3001/refresh", {
+          params: { analysisUrl: analysisData.data.links.self },
         });
         setAnalysisData(response.data);
-        setMessage(
-          "Refresh successful! Scan status: " +
-            response.data.data.attributes.status
-        );
+        let scanStatus = response.data.data.attributes.status;
+        if (!scanStatus && response.data.data.attributes.last_analysis_stats) {
+          const stats = response.data.data.attributes.last_analysis_stats;
+          scanStatus = stats.malicious > 0 ? "malicious" : "clean";
+        }
+        setMessage("Refresh successful! Scan status: " + scanStatus);
       } catch (error) {
         console.error("Refresh failed:", error);
         setMessage("Refresh failed.");
@@ -74,6 +75,33 @@ function App() {
     }
   };
 
+  // Automatic refresh: poll every 15 seconds if scan isn't complete.
+  useEffect(() => {
+    let intervalId;
+    if (analysisData && analysisData.data && analysisData.data.attributes) {
+      const attrs = analysisData.data.attributes;
+      // If the historical scan already has results, or if it's a new scan that's completed, no need to poll.
+      if (!attrs.last_analysis_results && attrs.status !== "completed") {
+        intervalId = setInterval(() => {
+          handleRefresh();
+        }, 15000);
+      }
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [analysisData]);
+
+  // Determine display status for showing current scan status.
+  let displayStatus = "";
+  if (analysisData && analysisData.data && analysisData.data.attributes) {
+    displayStatus = analysisData.data.attributes.status;
+    if (!displayStatus && analysisData.data.attributes.last_analysis_stats) {
+      const stats = analysisData.data.attributes.last_analysis_stats;
+      displayStatus = stats.malicious > 0 ? "malicious" : "clean";
+    }
+  }
+
   return (
     <div className="App">
       <Navbar />
@@ -82,22 +110,23 @@ function App() {
         handleUpload={handleUpload}
         message={message}
       />
-      {/* If analysisData exists, show the current scan status and refresh button if needed */}
       {analysisData && analysisData.data && analysisData.data.attributes && (
         <div style={{ textAlign: "center", margin: "16px" }}>
-          <p>Current Scan Status: {analysisData.data.attributes.status}</p>
-          {analysisData.data.attributes.status !== "completed" && (
+          <p>Current Scan Status: {displayStatus}</p>
+          {displayStatus !== "completed" && (
             <button onClick={handleRefresh}>Refresh</button>
           )}
         </div>
       )}
-      {/* Only render the ResultsGrid once the scan is completed */}
-      {analysisData &&
-        analysisData.data &&
-        analysisData.data.attributes &&
-        analysisData.data.attributes.status === "completed" && (
-          <ResultsGrid results={analysisData.data.attributes.results} />
-        )}
+      {analysisData && analysisData.data && analysisData.data.attributes ? (
+        analysisData.data.attributes.last_analysis_results ? (
+          <ResultsGrid
+            results={analysisData.data.attributes.last_analysis_results}
+          />
+        ) : (
+          <p>Waiting for scan to complete...</p>
+        )
+      ) : null}
     </div>
   );
 }
